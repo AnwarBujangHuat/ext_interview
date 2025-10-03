@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../view_model/cart_view_model.dart';
 
 class CartPage extends StatelessWidget {
   const CartPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final cartVM = Provider.of<CartViewModel>(context);
+
     return Scaffold(
       backgroundColor: Color(0xFFF8F9FA),
       body: SafeArea(
@@ -30,7 +34,7 @@ class CartPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      '3 items',
+                      '${cartVM.cartItems.length} items',
                       style: TextStyle(
                         color: Color(0xFF2d5a3d),
                         fontWeight: FontWeight.bold,
@@ -43,8 +47,9 @@ class CartPage extends StatelessWidget {
             Expanded(
               child: ListView.builder(
                 padding: EdgeInsets.symmetric(horizontal: 20),
-                itemCount: 3,
+                itemCount: cartVM.cartItems.length,
                 itemBuilder: (context, index) {
+                  final item = cartVM.cartItems[index];
                   return Container(
                     margin: EdgeInsets.only(bottom: 15),
                     padding: EdgeInsets.all(15),
@@ -71,7 +76,7 @@ class CartPage extends StatelessWidget {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(12),
                             child: Image.asset(
-                              'assets/images/plant${index + 1}.jpg',
+                              item.imagePath,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(
@@ -92,7 +97,7 @@ class CartPage extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Plant Care Package ${index + 1}',
+                                item.title,
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -101,7 +106,7 @@ class CartPage extends StatelessWidget {
                               ),
                               SizedBox(height: 5),
                               Text(
-                                'Premium plant care service',
+                                item.subtitle,
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey[600],
@@ -112,7 +117,7 @@ class CartPage extends StatelessWidget {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    'RM ${(85 + index * 20).toStringAsFixed(2)}',
+                                    'RM ${item.price.toStringAsFixed(2)}',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -129,7 +134,7 @@ class CartPage extends StatelessWidget {
                                         child: Row(
                                           children: [
                                             InkWell(
-                                              onTap: () {},
+                                              onTap: () => cartVM.decrementQuantity(index),
                                               child: Container(
                                                 padding: EdgeInsets.all(8),
                                                 child: Icon(Icons.remove, size: 16),
@@ -137,10 +142,10 @@ class CartPage extends StatelessWidget {
                                             ),
                                             Container(
                                               padding: EdgeInsets.symmetric(horizontal: 12),
-                                              child: Text('1'),
+                                              child: Text('${item.quantity}'),
                                             ),
                                             InkWell(
-                                              onTap: () {},
+                                              onTap: () => cartVM.incrementQuantity(index),
                                               child: Container(
                                                 padding: EdgeInsets.all(8),
                                                 child: Icon(Icons.add, size: 16),
@@ -187,7 +192,7 @@ class CartPage extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'RM 245.00',
+                        'RM ${cartVM.totalPrice.toStringAsFixed(2)}',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,

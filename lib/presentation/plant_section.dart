@@ -1,8 +1,11 @@
-import 'package:ext_interview/widgets/balance_summary.dart';
-import 'package:ext_interview/widgets/hero_section.dart';
-import 'package:ext_interview/widgets/maps_widget.dart';
-import 'package:ext_interview/widgets/points_section.dart';
+import 'package:ext_interview/view_model/cart_view_model.dart';
+import 'package:ext_interview/view_model/plant_view_model.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../widgets/balance_summary.dart';
+import '../widgets/hero_section.dart';
+import '../widgets/maps_widget.dart';
+import '../widgets/points_section.dart';
 
 class PlantShopHomePage extends StatefulWidget {
   const PlantShopHomePage({super.key});
@@ -12,14 +15,14 @@ class PlantShopHomePage extends StatefulWidget {
 }
 
 class _PlantShopHomePageState extends State<PlantShopHomePage> {
- final ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollController();
   int _firstVisibleIndex = 0;
-  final double _itemWidth = 200;  
+  final double _itemWidth = 200;
 
   @override
   void initState() {
     super.initState();
-     _scrollController.addListener(() {
+    _scrollController.addListener(() {
       final index = (_scrollController.offset / _itemWidth).floor();
       if (index != _firstVisibleIndex) {
         setState(() {
@@ -31,6 +34,8 @@ class _PlantShopHomePageState extends State<PlantShopHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final plantVM = Provider.of<PlantSectionViewModel>(context);
+
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
@@ -48,7 +53,7 @@ class _PlantShopHomePageState extends State<PlantShopHomePage> {
                 child: Padding(
                   padding: EdgeInsets.all(20),
                   child: Column(
-                    spacing: 15,
+                    spacing: 10,
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -85,8 +90,7 @@ class _PlantShopHomePageState extends State<PlantShopHomePage> {
                 ),
               ),
             ),
-            
-       HeroSection(), 
+            HeroSection(),
             Padding(
               padding: EdgeInsets.all(20),
               child: Column(
@@ -129,34 +133,38 @@ class _PlantShopHomePageState extends State<PlantShopHomePage> {
                     ],
                   ),
                   SizedBox(height: 20),
-                  
-                 
-                 SizedBox(
-                  height: 300,
-                   child: ListView.separated(
-                          controller: _scrollController,
-physics: ClampingScrollPhysics(),
-                    separatorBuilder: (context, index) => SizedBox(width: 10),
-                    shrinkWrap: true,
-                    scrollDirection:  Axis.horizontal ,
-                    itemBuilder:(context, index) {return Padding(
-                      padding: _firstVisibleIndex != index ?const EdgeInsets.symmetric(vertical: 12.0): EdgeInsets.zero,
-                      child: SizedBox(
-                        width:230,
+                  SizedBox(
+                    height: 300,
+                    child: ListView.separated(
+                      controller: _scrollController,
+                      physics: ClampingScrollPhysics(),
+                      separatorBuilder: (context, index) => SizedBox(width: 10),
+                      shrinkWrap: true,
+                      scrollDirection: Axis.horizontal,
+                      itemCount: plantVM.services.length,
+                      itemBuilder: (context, index) {
+                        final service = plantVM.services[index];
+                        return Padding(
+                          padding: _firstVisibleIndex != index
+                              ? const EdgeInsets.symmetric(vertical: 12.0)
+                              : EdgeInsets.zero,
+                          child: SizedBox(
+                            width: 230,
                             child: _buildEnhancedServiceCard(
-                              'Premium Plant Care Package',
-                              'Complete care for your indoor plants',
-                              'RM 85.00',
-                              'assets/Image.jpg',
+                              service.title,
+                              service.description,
+                              'RM ${service.price.toStringAsFixed(2)}',
+                              service.imagePath,
                               Color(0xFF2d5a3d),
                             ),
-                       ),
-                    );},itemCount: 10,),
-                 )
-               ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
-            
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
@@ -189,7 +197,6 @@ physics: ClampingScrollPhysics(),
                     ),
                   ),
                   SizedBox(height: 30),
-                  
                   GridView.builder(
                     shrinkWrap: true,
                     physics: NeverScrollableScrollPhysics(),
@@ -199,28 +206,29 @@ physics: ClampingScrollPhysics(),
                       crossAxisSpacing: 15,
                       mainAxisSpacing: 20,
                     ),
-                    itemCount: 6,
+                    itemCount: plantVM.trendingPlants.length,
                     itemBuilder: (context, index) {
+                      final plant = plantVM.trendingPlants[index];
                       return _buildEnhancedPlantCard(
-                        'Monstera Deliciosa Premium',
-                        'Perfect for indoor decoration with beautiful split leaves',
-                        'RM ${(45 + index * 15).toStringAsFixed(2)}',
-                        'assets/Image.jpg',
+                        plant.name,
+                        plant.description,
+                        'RM ${plant.price.toStringAsFixed(2)}',
+                        plant.imagePath,
                       );
                     },
                   ),
                 ],
               ),
             ),
-           buildMapSection(),
-         ],
+            buildMapSection(),
+          ],
         ),
       ),
     );
   }
-  
 
-  Widget _buildEnhancedServiceCard(String title, String description, String price, String imagePath, Color accentColor) {
+  Widget _buildEnhancedServiceCard(String title, String description, String price,
+      String imagePath, Color accentColor) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -317,16 +325,32 @@ physics: ClampingScrollPhysics(),
                         color: accentColor,
                       ),
                     ),
-                    Container(
-                      padding: EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: accentColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.add,
-                        color: accentColor,
-                        size: 16,
+                    GestureDetector(
+                      onTap: () {
+                        final cartVM = Provider.of<CartViewModel>(context, listen: false);
+                        cartVM.addItem(
+                          CartItem(
+                            title: title,
+                            subtitle: description,
+                            imagePath: imagePath,
+                            price: double.tryParse(price.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0,
+                          ),
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Added to cart!')),
+                        );
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: accentColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.add,
+                          color: accentColor,
+                          size: 16,
+                        ),
                       ),
                     ),
                   ],
@@ -338,7 +362,7 @@ physics: ClampingScrollPhysics(),
       ),
     );
   }
-  
+
   Widget _buildEnhancedPlantCard(String name, String description, String price, String imagePath) {
     return Container(
       decoration: BoxDecoration(
@@ -429,5 +453,4 @@ physics: ClampingScrollPhysics(),
       ),
     );
   }
-
 }

@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../view_model/profile_view_model.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final profileVM = Provider.of<ProfileViewModel>(context);
+
     return Scaffold(
       backgroundColor: Color(0xFFF8F9FA),
       body: SafeArea(
@@ -32,7 +36,7 @@ class ProfilePage extends StatelessWidget {
                     ),
                     SizedBox(height: 15),
                     Text(
-                      'John Gardner',
+                      profileVM.name,
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -51,7 +55,6 @@ class ProfilePage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         _buildProfileStat('Orders', '12'),
-                        _buildProfileStat('Points', '1,250'),
                         _buildProfileStat('Plants', '24'),
                       ],
                     ),
@@ -63,13 +66,16 @@ class ProfilePage extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
-                    _buildProfileOption(Icons.edit, 'Edit Profile', () {}),
+                    _buildProfileOption(Icons.edit, 'Edit Profile', () {
+                      profileVM.updateName('New Name');
+                    }),
                     _buildProfileOption(Icons.history, 'Order History', () {}),
                     _buildProfileOption(Icons.favorite, 'Wishlist', () {}),
                     _buildProfileOption(Icons.notifications, 'Notifications', () {}),
                     _buildProfileOption(Icons.help, 'Help & Support', () {}),
                     _buildProfileOption(Icons.settings, 'Settings', () {}),
                     SizedBox(height: 20),
+                  
                     _buildProfileOption(Icons.logout, 'Logout', () {}, isLogout: true),
                   ],
                 ),
